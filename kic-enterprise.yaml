@@ -1,0 +1,16 @@
+image:
+  repository: kong/kong-gateway
+  tag: "3.4"
+
+env:
+  prefix: /kong_prefix/
+  database: "off"
+
+ingressController:
+  enabled: true
+
+enterprise:
+  enabled: true
+  license_secret: kong-enterprise-license
+  vitals:
+    enabled: true

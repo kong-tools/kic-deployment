@@ -1,0 +1,191 @@
+# Kong for Kubernetes with Kong Enterprise with Enterprise features enabled and
+# exposed via TLS-enabled Ingresses. Before installing:
+# * Several settings (search for the string "CHANGEME") require user-provided
+#   Secrets. These Secrets must be created before installation.
+# * Ingresses reference example "<service>.kong.CHANGEME.example" hostnames. These must
+#   be changed to an actual hostname that resolve to your proxy.
+# * Ensure that your session configurations create cookies that are usable
+#   across your services. The admin session configuration must create cookies
+#   that are sent to both the admin API and Kong Manager, and any Dev Portal
+#   instances with authentication must create cookies that are sent to both
+#   the Portal and Portal API.
+
+image:
+  repository: kong/kong-gateway
+  tag: "3.4"
+
+env:
+  prefix: /kong_prefix/
+  database: postgres
+  admin_api_uri: "http://localhost:8001"
+  admin_gui_url: "http://localhost:8002"
+  portal_gui_host: "localhost:8003"
+  password:
+    valueFrom:
+      secretKeyRef:
+        name: kong-enterprise-superuser-password #CHANGEME
+        key: password #CHANGEME
+
+admin:
+  enabled: true
+  type: LoadBalancer
+  annotations: {}
+
+  http:
+    enabled: true
+    servicePort: 8001
+    containerPort: 8001
+
+  tls:
+    enabled: false
+    servicePort: 8444
+    containerPort: 8444
+    parameters:
+    - http2
+
+  ingress:
+    enabled: false
+    tls: domain-tls-secret
+    hostname: admin.jwconsult.com
+    annotations: {}
+    path: /
+
+proxy:
+  enabled: true
+  type: LoadBalancer
+  annotations: {}
+
+  http:
+    enabled: true
+    servicePort: 80
+    containerPort: 8000
+    parameters: []
+
+  tls:
+    enabled: true
+    servicePort: 443
+    containerPort: 8443
+    parameters:
+    - http2
+
+  stream: {}
+
+  ingress:
+    enabled: false
+    annotations: {}
+    path: /
+
+  externalIPs: []
+
+enterprise:
+  enabled: true
+  # CHANGEME: https://github.com/Kong/charts/blob/main/charts/kong/README.md#kong-enterprise-license
+  license_secret: kong-enterprise-license
+  vitals:
+    enabled: true
+  portal:
+    enabled: true
+  rbac:
+    enabled: false
+  smtp:
+    enabled: false
+
+manager:
+  enabled: true
+  type: LoadBalancer
+  annotations: {}
+
+  http:
+    enabled: true
+    servicePort: 8002
+    containerPort: 8002
+
+  tls:
+    enabled: false
+    servicePort: 8445
+    containerPort: 8445
+    parameters:
+    - http2
+
+  ingress:
+    enabled: false
+    tls: domain-tls-secret
+    hostname: manager.jwconsult.com
+    annotations: {}
+    path: /
+
+  externalIPs: []
+
+portal:
+  enabled: true
+  type: NodePort
+  annotations:
+    konghq.com/protocol: "https"
+
+  http:
+    enabled: true
+    servicePort: 8003
+    containerPort: 8003
+    parameters: []
+
+  tls:
+    enabled: true
+    servicePort: 8446
+    containerPort: 8446
+    parameters:
+    - http2
+
+  ingress:
+    enabled: false
+    tls: domain-tls-secret
+    hostname: portal.jwconsult.com
+    annotations:
+      kubernetes.io/ingress.class: "kong"
+    path: /
+
+  externalIPs: []
+
+portalapi:
+  enabled: false
+  type: NodePort
+  annotations:
+    konghq.com/protocol: "https"
+
+  http:
+    enabled: true
+    servicePort: 8004
+    containerPort: 8004
+    parameters: []
+
+  tls:
+    enabled: true
+    servicePort: 8447
+    containerPort: 8447
+    parameters:
+    - http2
+
+  ingress:
+    enabled: true
+    tls: domain-tls-secret
+    hostname: portalapi.jwconsult.com
+    annotations:
+      kubernetes.io/ingress.class: "kong"
+    path: /
+
+  externalIPs: []
+
+postgresql:
+  enabled: true
+  auth:
+    username: kong
+    database: kong
+    password: password
+
+ingressController:
+  enabled: true
+  env:
+    kong_admin_token:
+      valueFrom:
+        secretKeyRef:
+          name: kong-enterprise-superuser-password #CHANGEME
+          key: password #CHANGEME

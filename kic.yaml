@@ -1,0 +1,10 @@
+image:
+  repository: kong/kong
+  tag: "3.4"
+
+env:
+  prefix: /kong_prefix/
+  database: "off"
+
+ingressController:
+  enabled: true
