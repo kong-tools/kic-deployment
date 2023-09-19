@@ -12,7 +12,7 @@ helm repo update
 
 kubectl create namespace kong
 
-helm install kic kong/kong -n kong -f kic-enterprise.yaml
+helm install kic kong/kong -n kong -f kic.yaml
 
 curl -i $PROXY_IP:$PORT
 

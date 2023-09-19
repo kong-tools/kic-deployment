@@ -67,7 +67,35 @@ If you get 404 no route matched then the gateway is configured successfullly. Th
 
 ## KIC - Konnect
 
-TODO
+You need an account with Kong Konnect to deploy KIC in a managed way. This option provides a read only Kong Manager which would help you to view, monitor the Ingress Controller which is connected to your runtime running on your platform. It also manages all your configurations using a DB which is managed by Kong. 
+
+Create a runtime group to manage the ingress controller nodes. During the creation you can generate the certs and helm script that can be run on your cluster to perform the installation. 
+
+![konnect-manager](./images/konnect-rm.png)
+
+On the runtime group creation page you will get option to generate certificate. Copy and store the cert and key locally to files and generate secrets using the below command, 
+
+`kubectl create secret tls konnect-client-tls -n kong --cert=konnect-cluster.crt --key=konnect-cluster.key`
+
+You can now copy the helm values and store in your [values.yaml](./kic-konnect.yaml)
+
+Run the helm command to install the ingress controller,
+
+`helm install kong kong/ingress -n kong -f kic-konnect.yaml`
+
+Once your cluster gets connected to Konnect you will see the dashboard showing the KIC operational and details of ingress controller. From here you can view the services, routes and other objects that is being deployed in your K8s. 
+
+![kic-success](./images/kic-success.png)
+
+In order to test the kong gateway is up and running you need to expose the port outside the cluster. I will be using port-forward. You can replace the pod name from the output of above command. 
+
+`kubectl port-forward kong-gateway-cf949fcf5-7ss96 -n kong 8000:8000`
+
+Open a new shell prompt and run the curl command,
+
+`curl -i http://localhost:8000`
+
+Now you can start deploying your services and routes to cluster and can view their analytics on the read only Kong Manager. 
 
 ## Proxying services via Kong
 
@@ -161,13 +189,17 @@ Via: kong/3.4.0
 
 Power of Kong Gateway can be seen with the latency experienced when it passes through Ingress. Note the `X-Kong-Proxy-Latency` values in the output. 
 
+## Configuring Plugins
+
+TODO
+
 ## Switching to Enterprise
 
 In order to use the enterprise capabilities of Kong like advanced plugins and others, you need to add the license as secret and add the secret name to [values.yaml](./kic-enterprise.yaml)
 
 `kubectl create secret generic kong-enterprise-license --from-file=license=./license.json`
 
-[values.yaml](./kic-full.yaml) has the complete setup including kong manager, dev portal, postgres DB with enterprise license which is typical deployment for your enterprise. 
+This [values.yaml](./kic-full.yaml) has the complete setup including kong manager, dev portal, postgres DB with enterprise license which is typical deployment for your enterprise. 
 
 You can refer the [Kong Charts](https://github.com/Kong/charts/blob/main/charts/kong/values.yaml) for complete list of values that can be used with charts. 
 

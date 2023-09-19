@@ -1,5 +1,5 @@
 image:
-  repository: kong/kong-gateway
+  repository: kong/kong
   tag: "3.4"
 
 env:
